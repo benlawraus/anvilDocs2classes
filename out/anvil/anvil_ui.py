@@ -1,10 +1,14 @@
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import List, Dict
 
-from dataclasses import dataclass
-from typing import List,Dict
 from _anvil_designer.componentsUI.GoogleMap import GoogleMap
 from _anvil_designer.componentsUI.anvil import Component,Container,Media
 from math import pi as PI
 
+
+def default_val(val):
+    return lambda: val
 String = str
 Number = float
 Integer = int
@@ -38,7 +42,7 @@ class Button(Component):
 	icon:Icon=None		#  The icon to display on this component. Either a URL, or a FontAwesome Icon, e.g. ‘fa:user’.
 	icon_align:String=None		#  The alignment of the icon on this component. Set to ‘top’ for a centred icon on a component with no text.
 	italic:Boolean=None		#  Display this component’s text in italics
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
@@ -64,7 +68,7 @@ class Canvas(Component):
 	line_join:String=None		#  The line join to use when connecting lines on this canvas.
 	line_width:Number=None		#  The width of lines drawn on this canvas.
 	miter_limit:Pixels=None		#  The limit of line join miters, in pixels.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	shadow_blur:Pixels=None		#  The required shadow blur, in pixels.
 	shadow_color:String=None		#  The color to use for shadows.
@@ -190,7 +194,7 @@ class CheckBox(Component):
 	font_size:Pixels=None		#  The height of text displayed on this component in pixels
 	foreground:Color=None		#  The foreground colour of this component.
 	italic:Boolean=None		#  Display this component’s text in italics
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
@@ -212,7 +216,7 @@ class ColumnPanel(Container):
 	col_spacing:String="medium"		#  Space between columns
 	col_widths:String=""		#  Custom column widths in this panel
 	foreground:Color="#ff0000"		#  The foreground colour of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole="default"		#  Choose how this component can appear, based on your app’s visual theme.
 	row_spacing:Pixels=None		#  The spacing between rows of components in this container, in pixels.
 	spacing_above:String="small"		#  The vertical space above this component.
@@ -234,7 +238,7 @@ class DataGrid(Container):
 	border:String=None		#  The border of this component. Can take any valid CSS border value.
 	columns:Datagridcolumns=None		#  A list of columns to display in this Data Grid.
 	foreground:Color=None		#  The foreground colour of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	row_spacing:Pixels=None		#  The spacing between rows of components in this container, in pixels.
 	rows_per_page:Integer=None		#  The maximum number of rows to display at one time.
@@ -280,8 +284,8 @@ class DataRowPanel(Container):
 	font_size:Pixels=None		#  The height of text displayed on this component in pixels
 	foreground:Color=None		#  The foreground colour of this component.
 	italic:Boolean=None		#  Display this component’s text in italics
-	item:Object=None		#  The data to display in this row by default.
-	parent:Object=None		#  
+	item=defaultdict(default_val(None))		#  The data to display in this row by default.
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	row_spacing:Pixels=None		#  The spacing between rows of components in this container, in pixels.
 	spacing_above:String=None		#  The vertical space above this component.
@@ -311,7 +315,7 @@ class DatePicker(Component):
 	italic:Boolean=None		#  Display this component’s text in italics
 	max_date:String=None		#  The maximum date the user can select.
 	min_date:String=None		#  The minimum date the user can select.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	pick_time:Boolean=None		#  Whether the user should be able to select a time as well as a date
 	placeholder:String=None		#  A string to display when the DatePicker is empty.
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
@@ -337,7 +341,7 @@ class DropDown(Component):
 	include_placeholder:Boolean=None		#  Whether to add a placeholder item to the list with value None
 	italic:Boolean=None		#  Display this component’s text in italics
 	items:Items=None		#  The items to display in this dropdown.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	placeholder:String=None		#  The text to be displayed when the selected_value is None.
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	selected_value:Object=None		#  The value of the currently selected item. Can only be set at runtime.
@@ -370,7 +374,7 @@ class FileLoader(Component):
 	icon_align:String=None		#  The alignment of the icon on this component. Set to ‘top’ for a centred icon on a component with no text.
 	italic:Boolean=None		#  Display this component’s text in italics
 	multiple:Boolean=None		#  If True, this FileLoader can load multiple files at the same time
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	show_state:Boolean=None		#  If True, display a message describing selected files.
 	spacing_above:String=None		#  The vertical space above this component.
@@ -395,7 +399,7 @@ class FlowPanel(Container):
 	background:Color=None		#  The background colour of this component.
 	border:String=None		#  The border of this component. Can take any valid CSS border value.
 	foreground:Color=None		#  The foreground colour of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing:String=None		#  Space between components
 	spacing_above:String=None		#  The vertical space above this component.
@@ -431,7 +435,7 @@ class GoogleMap(Container):
 	map_type_id:GoogleMap.MapTypeId=None		#  The map type ID. Defaults to MapTypeId.ROADMAP
 	max_zoom:Number=None		#  The maximum zoom level which will be displayed on the map.
 	min_zoom:Number=None		#  The minimum zoom level which will be displayed on the map.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	rotate_control:Boolean=None		#  The enabled/disabled state of the rotate control.
 	rotate_control_options:GoogleMap.RotateControlOptions=None		#  The display options for the rotate control.
 	scale_control:Boolean=None		#  The enabled/disabled state of the scale control.
@@ -460,7 +464,7 @@ class GridPanel(Container):
 	background:Color=None		#  The background colour of this component.
 	border:String=None		#  The border of this component. Can take any valid CSS border value.
 	foreground:Color=None		#  The foreground colour of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	row_spacing:Pixels=None		#  The spacing between rows of components in this container, in pixels.
 	spacing_above:String=None		#  The vertical space above this component.
@@ -480,7 +484,7 @@ class HtmlTemplate(Container):
 	border:String=None		#  The border of this component. Can take any valid CSS border value.
 	foreground:Color=None		#  The foreground colour of this component.
 	html:Html=None		#  The HTML from which this panel is defined
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	tag:Object=None		#  Use this property to store any extra information about this component
 	tooltip:String=None		#  Text to display when you hover the mouse over this component
@@ -504,7 +508,7 @@ class Image(Component):
 	foreground:Color=None		#  The foreground colour of this component.
 	height:String=None		#  The height of this component.
 	horizontal_align:String=None		#  Position the image horizontally within this component
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	source:Uri=None		#  The image source - set a string for a URL or a Media object in code
 	spacing_above:String=None		#  The vertical space above this component.
@@ -528,7 +532,7 @@ class Label(Component):
 	icon:Icon=None		#  The icon to display on this component. Either a URL, or a FontAwesome Icon, e.g. ‘fa:user’.
 	icon_align:String=None		#  The alignment of the icon on this component. Set to ‘top’ for a centred icon on a component with no text.
 	italic:Boolean=None		#  Display this component’s text in italics
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
@@ -545,7 +549,7 @@ class LinearPanel(Container):
 	background:Color=None		#  The background colour of this component.
 	border:String=None		#  The border of this component. Can take any valid CSS border value.
 	foreground:Color=None		#  The foreground colour of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	row_spacing:Pixels=None		#  The spacing between rows of components in this container, in pixels.
 	spacing_above:String=None		#  The vertical space above this component.
@@ -568,7 +572,7 @@ class Link(ColumnPanel):
 	icon:Icon=""		#  The icon to display on this component. Either a URL, or a FontAwesome Icon, e.g. ‘fa:user’.
 	icon_align:String="left"		#  The alignment of the icon on this component. Set to ‘top’ for a centred icon on a component with no text.
 	italic:Boolean=False		#  Display this component’s text in italics
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	tag:Object=None		#  Use this property to store any extra information about this component
 	text:String=""		#  The text displayed on this component
 	tooltip:String=""		#  Text to display when you hover the mouse over this component
@@ -600,7 +604,7 @@ class Plot(Component):
 	height:String=None		#  The height of this component.
 	interactive:Boolean=None		#  Whether this plot should be interactive
 	layout:Object=None		#  Plot layout
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
 	tag:Object=None		#  Use this property to store any extra information about this component
@@ -639,7 +643,7 @@ class RadioButton(Component):
 	foreground:Color=None		#  The foreground colour of this component.
 	group_name:String=None		#  The name of the group this radio button belongs to.
 	italic:Boolean=None		#  Display this component’s text in italics
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	selected:Boolean=None		#  The status of the radio button
 	spacing_above:String=None		#  The vertical space above this component.
@@ -663,7 +667,7 @@ class RepeatingPanel(Component):
 	foreground:Color=None		#  The foreground colour of this component.
 	item_template:Form=None		#  The name of the form to repeat for every item
 	items:Items=None		#  A list of items for which the ‘item_template’ will be instantiated.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
@@ -691,7 +695,7 @@ class RichText(Container):
 	font_size:Pixels=None		#  The height of text displayed on this component in pixels
 	foreground:Color=None		#  The foreground colour of this component.
 	format:String=None		#  The format of the content of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
@@ -710,7 +714,7 @@ class RichText(Container):
 @dataclass
 class Spacer(Component):
 	height:String=None		#  The height of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
 	tag:Object=None		#  Use this property to store any extra information about this component
@@ -732,7 +736,7 @@ class TextArea(Component):
 	foreground:Color=None		#  The foreground colour of this component.
 	height:String=None		#  The height of this component.
 	italic:Boolean=None		#  Display this component’s text in italics
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	placeholder:String=None		#  The text to be displayed when the component is empty.
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
@@ -763,7 +767,7 @@ class TextBox(Component):
 	foreground:Color="#ff0000"		#  The foreground colour of this component.
 	hide_text:Boolean=False		#  Display stars instead of the text in this box
 	italic:Boolean=False		#  Display this component’s text in italics
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	placeholder:String="Enter text here"		#  The text to be displayed when the component is empty.
 	role:Themerole="default"		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String="small"		#  The vertical space above this component.
@@ -786,7 +790,7 @@ class TextBox(Component):
 @dataclass
 class Timer(Component):
 	interval:Seconds=None		#  The number of seconds between each tick. 0 switches the timer off.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	pass
 
 @dataclass
@@ -800,7 +804,7 @@ class XYPanel(Container):
 	border:String=None		#  The border of this component. Can take any valid CSS border value.
 	foreground:Color=None		#  The foreground colour of this component.
 	height:String=None		#  The height of this component.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
@@ -827,7 +831,7 @@ class YouTubeVideo(Component):
 	height:String=None		#  The height of this component.
 	loop:Boolean=None		#  Set to true to play this video repeatedly
 	mute:Boolean=None		#  Set whether the video is muted or not.
-	parent:Object=None		#  
+	parent:Object=Container()		#  
 	role:Themerole=None		#  Choose how this component can appear, based on your app’s visual theme.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.

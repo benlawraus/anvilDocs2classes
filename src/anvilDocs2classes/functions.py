@@ -4,10 +4,10 @@ import pathlib
 from typing import Tuple, List, Dict
 from string import Template, whitespace
 
-from defaults.types import TypeCatalog
-from defaults import defaults as DefaultModule
+from src.anvilDocs2classes.types import TypeCatalog, GENERIC_ITEM
+from defaults import defaults as defaults_py
 from prodict.prodict import Prodict
-from src.anvilDocs2classes.classes import FileInfo
+from src.anvilDocs2classes.classes import FileInfo, ClassAttrType
 
 
 def build_path(filename, directory) -> pathlib.Path:
@@ -54,7 +54,7 @@ def translate_type(attr_method, type_catalog: Dict[str, str], module_name: str) 
     attr, of_type, description, _ = list(attr_method.values())
 
     if 'list' in of_type:
-        attr_method['of_type']= of_type.replace('list(', '').replace(')', '')
+        attr_method['of_type'] = of_type.replace('list(', '').replace(')', '')
         of_type = translate_type(attr_method, type_catalog, module_name)
         return 'List[' + of_type + ']'
     if attr in seconds_list:
@@ -69,7 +69,7 @@ def translate_type(attr_method, type_catalog: Dict[str, str], module_name: str) 
         class_name = of_type.replace(' instance', '')
         if module_name == 'anvil':
             # drop the `anvil.`
-            class_name = class_name.replace('anvil.','')
+            class_name = class_name.replace('anvil.', '')
         type_catalog.update({class_name: class_name})
         return class_name
     if module_name in of_type:
@@ -168,21 +168,40 @@ def one_space_only(text: str):
     return ''.join(_v_list)
 
 
-def assign_defaults(class_name: str, class_attr: Dict[str, Dict[str, str]]):
+def assign_parent_default(module_name: str, class_attr: ClassAttrType) -> None:
+    """Alters class_attr['parent'] by adding a default field."""
+    if 'parent' in class_attr:
+        parent_str = 'Container()'
+        if 'anvil.' in module_name:
+            parent_str = 'anvil.' + parent_str
+        class_attr['parent'].update({'default': parent_str})
+
+
+def assign_item_default(class_attr: ClassAttrType) -> None:
+    """Alters class_attr['item'] by adding a default field."""
+    if 'item' in class_attr:
+        class_attr['item'].update({'default': 'defaultdict(default_val(None))',
+                                   'of_type': None})
+    return
+
+
+def assign_defaults(module_name: str, class_name: str, class_attr: ClassAttrType):
     """Retrieves the default value and assigns to the attribute of class."""
+    assign_parent_default(module_name, class_attr)
+    assign_item_default(class_attr)
     try:
-        defaults = getattr(DefaultModule, class_name)
+        defaults = getattr(defaults_py, class_name)
     except AttributeError:
         # no defaults there
         return
     for attr_name, attr_value in class_attr.items():
         if attr_name in defaults:
             default_val = defaults.get(attr_name)
-            if isinstance(default_val,str):
+            if isinstance(default_val, str):
                 default_val = f'"{default_val}"'
             else:
                 default_val = str(default_val)
-            attr_value.update({'default':default_val})
+            attr_value.update({'default': default_val})
     return
 
 
@@ -203,7 +222,7 @@ def text2class(soup, module_name) -> Tuple[Dict, Dict]:
                 if "Properties" in class_sec.get_text():
                     attributes = extract_class_inners(class_sec, type_catalog, module_name)
                     # there might be defaults for this class
-                    assign_defaults(name, attributes)
+                    assign_defaults(module_name, name, attributes)
                     class_[name].update({"attributes": attributes})
                 if "Methods" in class_sec.get_text():
                     class_[name].update({"methods": extract_class_inners(class_sec, type_catalog, module_name)})
@@ -266,12 +285,18 @@ def method_string(method_dict):
 
 def attr_string(attr_dict):
     attrs = ""
-    attr_template = Template("\t$name:$of_type$default\t\t#  $description\n")
+    attr_template = Template("\t$name$type_not_none$of_type$default\t\t#  $description\n")
     for name, attr in attr_dict.items():
+        type_not_none = ':'
+        of_type = attr.get('of_type', '')
+        if of_type is None:
+            type_not_none = ''
+            of_type = ''
         attrs += attr_template.substitute(name=name,
-                                          of_type=attr.get('of_type', ''),
+                                          type_not_none=type_not_none,
+                                          of_type=of_type,
                                           description=attr.get('description', ''),
-                                          default = "="+attr.get('default','None')
+                                          default="=" + attr.get('default', 'None')
                                           )
     return attrs
 
@@ -300,13 +325,12 @@ def text2functions(soup, module_name: str) -> str:
     func_catalog = Prodict()
     while bs_marker and bs_marker.name != 'h2':
         if bs_marker.name == 'h4':
-            func = bs_marker.code
             func_str = bs_marker.code.get_text()
             while bs_marker.name != 'p':
                 bs_marker = bs_marker.next_sibling
             doc_str = bs_marker.get_text()
             func_name, params = extract_params(func_str)
-            func_catalog[func_name]=params
+            func_catalog[func_name] = params
             description = one_space_only(doc_str)
             function_str += function_template.substitute(name=func_name, tab="    ", param=params[2:],
                                                          description=description)
@@ -323,9 +347,9 @@ def set_url_hash(*args, **kwargs):
     return function_str
 
 
-def classes2string(class_: dict, type_catalog: dict, file_info:FileInfo) -> List[str]:
+def classes2string(class_: dict, type_catalog: dict, file_info: FileInfo) -> List[str]:
     # primary_classes = ('Component', 'Container', 'Media')
-    class_files = ['']*len(file_info.out_file_info)
+    class_files = [''] * len(file_info.out_file_info)
     ix = 0
     counter = 0
     for class_name in file_info.primary_classes:
@@ -344,7 +368,6 @@ def classes2string(class_: dict, type_catalog: dict, file_info:FileInfo) -> List
             continue
         class_files[ix] += class2string(class_name, class_[class_name])
 
-
     for class_name in class_:
         if class_name in file_info.primary_classes:
             continue
@@ -355,9 +378,8 @@ def classes2string(class_: dict, type_catalog: dict, file_info:FileInfo) -> List
     return class_files
 
 
-def types2string(type_catalog):
-    types_string = ""
+def types2string(type_catalog: Dict):
+    types_string = GENERIC_ITEM
     for key, item in TypeCatalog.items():
         types_string += f"{key} = {item}\n"
     return types_string
-

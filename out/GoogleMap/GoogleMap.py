@@ -1,7 +1,11 @@
-
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import List, Dict
+
 import _anvil_designer.componentsUI.anvil.component as anvil
+
+def default_val(val):
+    return lambda: val
 String = str
 Number = float
 Integer = int
@@ -96,7 +100,7 @@ class LatLngBounds():
 class AbstractOverlay(anvil.Component):
 	clickable:Boolean=None		#  True if this overlay raises mouse events.
 	draggable:Boolean=None		#  True if this overlay can be dragged.
-	parent:Object=None		#  
+	parent:Object=anvil.Container()		#  
 	visible:Boolean=None		#  True if this overlay should be displayed.
 	z_index:Number=None		#  The z-index compared to other overlays.
 	def add_component(self, map_component):
@@ -125,7 +129,7 @@ class Circle(AbstractOverlay):
 	editable:Boolean=None		#  True if this overlay can be edited by the user.
 	fill_color:String=None		#  The color to draw the overlay outline.
 	fill_opacity:Number=None		#  The opacity of the overlay outline.
-	parent:Object=None		#  
+	parent:Object=anvil.Container()		#  
 	radius:Number=None		#  The radius of the Circle.
 	stroke_color:String=None		#  The color to draw the overlay outline.
 	stroke_opacity:Number=None		#  The opacity of the overlay outline.
@@ -197,7 +201,7 @@ class InfoWindow(anvil.Component):
 	content:anvil.Component=None		#  Content to display in the InfoWindow.
 	disable_auto_pan:Boolean=None		#  Disable auto-pan on open.
 	max_width:Number=None		#  Maximum width of the infowindow, regardless of content’s width.
-	parent:Object=None		#  
+	parent:Object=anvil.Container()		#  
 	pixel_offset:Size=None		#  The offset, in pixels, of the tip of the info window from the point on the map at whose geographical coordinates the info window is anchored.
 	position:LatLng=None		#  The LatLng at which to display this InfoWindow.
 	z_index:Number=None		#  All InfoWindows are displayed on the map in order of their zIndex, with higher values displaying in front of InfoWindows with lower values.
@@ -230,7 +234,7 @@ class Marker(AbstractOverlay):
 	icon:Symbol=None		#  The icon to display at the position of this Marker.
 	label:MarkerLabel=None		#  The label to display on this Marker.
 	opacity:Number=None		#  The opacity of this Marker.
-	parent:Object=None		#  
+	parent:Object=anvil.Container()		#  
 	position:LatLng=None		#  The LatLng position of this Marker
 	title:String=None		#  The tooltip text for this Marker.
 	pass
@@ -249,7 +253,7 @@ class Polygon(AbstractOverlay):
 	fill_color:String=None		#  The color to draw the overlay outline.
 	fill_opacity:Number=None		#  The opacity of the overlay outline.
 	geodesic:Boolean=None		#  When true, edges of the polygon are interpreted as geodesic and will follow the curvature of the Earth.
-	parent:Object=None		#  
+	parent:Object=anvil.Container()		#  
 	path:List[LatLng]=None		#  The ordered sequence of LatLng coordinates of the Polygon.
 	stroke_color:String=None		#  The color to draw the overlay outline.
 	stroke_opacity:Number=None		#  The opacity of the overlay outline.
@@ -262,7 +266,7 @@ class Polyline(AbstractOverlay):
 	editable:Boolean=None		#  True if this overlay can be edited by the user.
 	geodesic:Boolean=None		#  When true, edges of the polygon are interpreted as geodesic and will follow the curvature of the Earth.
 	icons:String=None		#  The icons to be rendered along the polyline.
-	parent:Object=None		#  
+	parent:Object=anvil.Container()		#  
 	path:List[LatLng]=None		#  The ordered sequence of LatLng coordinates of the Polyline.
 	stroke_color:String=None		#  The color to draw the overlay outline.
 	stroke_opacity:Number=None		#  The opacity of the overlay outline.
@@ -275,7 +279,7 @@ class Rectangle(AbstractOverlay):
 	editable:Boolean=None		#  True if this overlay can be edited by the user.
 	fill_color:String=None		#  The color to draw the overlay outline.
 	fill_opacity:Number=None		#  The opacity of the overlay outline.
-	parent:Object=None		#  
+	parent:Object=anvil.Container()		#  
 	stroke_color:String=None		#  The color to draw the overlay outline.
 	stroke_opacity:Number=None		#  The opacity of the overlay outline.
 	stroke_position:StrokePosition=None		#  The stroke position. Defaults to CENTER.

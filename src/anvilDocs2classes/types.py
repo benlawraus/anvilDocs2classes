@@ -16,3 +16,7 @@ TypeCatalog = dict(
     Form='object'
 )
 
+GENERIC_ITEM = """
+def default_val(val):
+    return lambda: val
+"""
