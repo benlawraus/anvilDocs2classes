@@ -1,0 +1,3 @@
+[submodule "prodict"]
+	path = prodict
+	url = https://github.com/ramazanpolat/prodict.git

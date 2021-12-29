@@ -1,5 +1,3 @@
-from prodict_0_8_18.prodict import Prodict
-
 TypeCatalog = dict(
     String='str',
     Number='float',
@@ -17,9 +15,4 @@ TypeCatalog = dict(
     Icon='str',
     Form='object'
 )
-
-class Param(Prodict):
-    attr: str
-    of_type: str
-    description: str
 

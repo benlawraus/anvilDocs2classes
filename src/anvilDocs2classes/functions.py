@@ -1,4 +1,3 @@
-import bs4
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 import pathlib
@@ -6,7 +5,9 @@ from typing import Tuple, List, Dict
 from string import Template, whitespace
 
 from defaults.types import TypeCatalog
-from prodict_0_8_18.prodict import Prodict
+from defaults import defaults as DefaultModule
+from prodict.prodict import Prodict
+from src.anvilDocs2classes.classes import FileInfo
 
 
 def build_path(filename, directory) -> pathlib.Path:
@@ -46,14 +47,15 @@ def convert_soup(html_doc):
     return soup
 
 
-
-def translate_type(attr: str, of_type: str, description: str, type_catalog: Dict[str, str], module_name: str) -> str:
+def translate_type(attr_method, type_catalog: Dict[str, str], module_name: str) -> str:
     seconds_list = ('duration', 'current_time', 'interval')
     objects_list = ('items',)
     int_list = ('rows_per_page',)
+    attr, of_type, description, _ = list(attr_method.values())
+
     if 'list' in of_type:
-        new_type = of_type.replace('list(', '').replace(')', '')
-        of_type = translate_type(attr, new_type, description, type_catalog, module_name)
+        attr_method['of_type']= of_type.replace('list(', '').replace(')', '')
+        of_type = translate_type(attr_method, type_catalog, module_name)
         return 'List[' + of_type + ']'
     if attr in seconds_list:
         return 'Seconds'
@@ -64,7 +66,10 @@ def translate_type(attr: str, of_type: str, description: str, type_catalog: Dict
     if attr == 'parent':
         return 'Object'
     if 'anvil' in of_type and of_type.count('.') == 1:
-        class_name = of_type.replace(' instance', '').split('.')[1]
+        class_name = of_type.replace(' instance', '')
+        if module_name == 'anvil':
+            # drop the `anvil.`
+            class_name = class_name.replace('anvil.','')
         type_catalog.update({class_name: class_name})
         return class_name
     if module_name in of_type:
@@ -99,21 +104,23 @@ def extract_class_inners(class_sec: Tag,
     bs_class_parts = class_sec.next_sibling
     while bs_class_parts and bs_class_parts.name != 'hr':
         try:
-            name = bs_class_parts.strong.get_text()
+            # name of attribute or function
+            attr_name = bs_class_parts.strong.get_text()
             description = ''
             try:
+                # description of attribute or method
                 description = bs_class_parts.p.get_text()
             except AttributeError:
-                # if name == "focus()":
-                #     t = 5
                 try:
-                    # for methods
+                    # description for methods
                     description = bs_class_parts.next_sibling.next_sibling.get_text()
                 except AttributeError:
                     pass
                 pass
-            par = dict()
+            par: Dict[str, str] = dict()  # key: name of func arg, value: description of arg
             try:
+                # sometimes the methods have parameters (GoogleMap) that have descriptions too
+                # mostly for events
                 params = bs_class_parts.ul
                 for param in params.select('li'):
                     par.update({param.code.get_text(): list(param.stripped_strings)[1]})
@@ -121,11 +128,13 @@ def extract_class_inners(class_sec: Tag,
                 pass
             of_t = ''
             try:
+                # type of the attribute, not applicable for methods
                 of_t = bs_class_parts.i.get_text()
             except AttributeError:
                 pass
-            of_type = translate_type(name, of_t, description, type_catalog, module_name)
-            class_parts.update({name: dict(of_type=of_type, description=description, param_description=par)})
+            attr_method = dict(attr=attr_name, of_type=of_t, description=description, param_description=par)
+            attr_method['of_type'] = translate_type(attr_method, type_catalog, module_name)
+            class_parts.update({attr_name: attr_method})
         except AttributeError:
             pass
         bs_class_parts = bs_class_parts.next_sibling
@@ -159,6 +168,24 @@ def one_space_only(text: str):
     return ''.join(_v_list)
 
 
+def assign_defaults(class_name: str, class_attr: Dict[str, Dict[str, str]]):
+    """Retrieves the default value and assigns to the attribute of class."""
+    try:
+        defaults = getattr(DefaultModule, class_name)
+    except AttributeError:
+        # no defaults there
+        return
+    for attr_name, attr_value in class_attr.items():
+        if attr_name in defaults:
+            default_val = defaults.get(attr_name)
+            if isinstance(default_val,str):
+                default_val = f'"{default_val}"'
+            else:
+                default_val = str(default_val)
+            attr_value.update({'default':default_val})
+    return
+
+
 def text2class(soup, module_name) -> Tuple[Dict, Dict]:
     h3_list = soup.select('.class-header')
     class_ = dict()
@@ -174,7 +201,10 @@ def text2class(soup, module_name) -> Tuple[Dict, Dict]:
         if len(class_sections) > 1:
             for class_sec in class_sections[1:]:
                 if "Properties" in class_sec.get_text():
-                    class_[name].update({"attributes": extract_class_inners(class_sec, type_catalog, module_name)})
+                    attributes = extract_class_inners(class_sec, type_catalog, module_name)
+                    # there might be defaults for this class
+                    assign_defaults(name, attributes)
+                    class_[name].update({"attributes": attributes})
                 if "Methods" in class_sec.get_text():
                     class_[name].update({"methods": extract_class_inners(class_sec, type_catalog, module_name)})
                 if "Events" in class_sec.get_text():
@@ -183,6 +213,7 @@ def text2class(soup, module_name) -> Tuple[Dict, Dict]:
 
 
 def extract_params(name: str) -> Tuple[str, str]:
+    """Extracts method name and arguments from a string taken from the webpage."""
     name_split = name.split('(')
     method_name = name_split[0]
     try:
@@ -214,6 +245,7 @@ def combine_para_description(param_description: Dict) -> str:
 
 
 def method_string(method_dict):
+    """Formats the `method_dict` into a string."""
     doc_string_template = Template('''\n\t\t"""$description$param_description\t\t"""''')
     method_template = Template("\tdef $name(self$params):$description\n\t\tpass\n")
     methods = ""
@@ -226,7 +258,7 @@ def method_string(method_dict):
             doc_string = ''
         methods += method_template.substitute(name=method_name,
                                               params=params,
-                                              type=attr.get('of_type', ''),
+                                              of_type=attr.get('of_type', ''),
                                               description=doc_string
                                               )
     return methods
@@ -234,11 +266,12 @@ def method_string(method_dict):
 
 def attr_string(attr_dict):
     attrs = ""
-    attr_template = Template("\t$name:$type = None\t\t#  $description\n")
+    attr_template = Template("\t$name:$of_type$default\t\t#  $description\n")
     for name, attr in attr_dict.items():
         attrs += attr_template.substitute(name=name,
-                                          type=attr.get('of_type', ''),
-                                          description=attr.get('description', '')
+                                          of_type=attr.get('of_type', ''),
+                                          description=attr.get('description', ''),
+                                          default = "="+attr.get('default','None')
                                           )
     return attrs
 
@@ -264,6 +297,7 @@ def text2functions(soup, module_name: str) -> str:
     except AttributeError:
         # no functions
         return ''
+    func_catalog = Prodict()
     while bs_marker and bs_marker.name != 'h2':
         if bs_marker.name == 'h4':
             func = bs_marker.code
@@ -272,35 +306,52 @@ def text2functions(soup, module_name: str) -> str:
                 bs_marker = bs_marker.next_sibling
             doc_str = bs_marker.get_text()
             func_name, params = extract_params(func_str)
+            func_catalog[func_name]=params
             description = one_space_only(doc_str)
             function_str += function_template.substitute(name=func_name, tab="    ", param=params[2:],
                                                          description=description)
         bs_marker = bs_marker.next_sibling
+
+    if module_name == 'anvil' and 'set_url_hash' not in func_catalog:
+        function_str += '''
+def set_url_hash(*args, **kwargs):
+    """This is added for `anvil_extras`. for some reason it is not in the anvil documentation."""
+    pass
+'''
+        func_catalog['set_url_hash'] = '*args, **kwargs'
+
     return function_str
 
 
-def classes2string(class_: dict, type_catalog: dict) -> Dict[str, str]:
-    primary_classes = ('Component', 'Container', 'Media', 'ColumnPanel', 'HtmlTemplate')
-    master_string = ""
-    class_files = dict(primary="", secondary="")
-    for class_name in primary_classes:
+def classes2string(class_: dict, type_catalog: dict, file_info:FileInfo) -> List[str]:
+    # primary_classes = ('Component', 'Container', 'Media')
+    class_files = ['']*len(file_info.out_file_info)
+    ix = 0
+    counter = 0
+    for class_name in file_info.primary_classes:
         if class_name not in class_:
             continue
-        class_files['primary'] += class2string(class_name, class_[class_name])
+        counter += 1
+        class_files[ix] += class2string(class_name, class_[class_name])
+
+    if counter > 0:
+        ix = 1
 
     for class_name in type_catalog:
-        if class_name in primary_classes:
+        if class_name in file_info.primary_classes:
             continue
         if class_name not in class_:
             continue
-        class_files['secondary'] += class2string(class_name, class_[class_name])
+        class_files[ix] += class2string(class_name, class_[class_name])
+
 
     for class_name in class_:
-        if class_name in primary_classes:
+        if class_name in file_info.primary_classes:
             continue
         if class_name in type_catalog:
             continue
-        class_files['secondary'] += class2string(class_name, class_[class_name])
+        class_files[ix] += class2string(class_name, class_[class_name])
+
     return class_files
 
 
@@ -310,18 +361,3 @@ def types2string(type_catalog):
         types_string += f"{key} = {item}\n"
     return types_string
 
-
-def import_string(module_name: str) -> str:
-    imports = """from dataclasses import dataclass
-from typing import List, Dict
-from math import pi as PI
-"""
-
-    if module_name + 'primary' == 'anvilprimary':
-        imports += """
-from . import *
-from .GoogleMap import *
-"""
-    else:
-        imports += 'from ..anvil import *\n'
-    return imports
