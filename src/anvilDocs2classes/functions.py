@@ -171,24 +171,26 @@ def one_space_only(text: str):
 def assign_parent_default(module_name: str, class_attr: ClassAttrType) -> None:
     """Alters class_attr['parent'] by adding a default field."""
     if 'parent' in class_attr:
-        parent_str = 'Container()'
+        parent_str = 'Container'
         if 'anvil.' in module_name:
             parent_str = 'anvil.' + parent_str
-        class_attr['parent'].update({'default': parent_str})
+        class_attr['parent'].update({'default': parent_str + '()',
+                                     'of_type': parent_str})
 
 
-def assign_item_default(class_attr: ClassAttrType) -> None:
-    """Alters class_attr['item'] by adding a default field."""
-    if 'item' in class_attr:
-        class_attr['item'].update({'default': 'defaultdict(default_val(None))',
-                                   'of_type': None})
+def assign_defaultdict(class_attr: ClassAttrType) -> None:
+    """Alters class_attr['item'] and class_attr['tag'] by adding a default field."""
+    for attr in ('item', 'tag'):
+        if attr in class_attr:
+            class_attr[attr].update({'default': 'defaultdict(default_val(None))',
+                                     'of_type': None})
     return
 
 
 def assign_defaults(module_name: str, class_name: str, class_attr: ClassAttrType):
     """Retrieves the default value and assigns to the attribute of class."""
     assign_parent_default(module_name, class_attr)
-    assign_item_default(class_attr)
+    assign_defaultdict(class_attr)
     try:
         defaults = getattr(defaults_py, class_name)
     except AttributeError:
