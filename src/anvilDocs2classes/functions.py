@@ -234,7 +234,8 @@ def text2class(soup, module_name) -> Tuple[Dict, Dict]:
 
 
 def extract_params(name: str) -> Tuple[str, str]:
-    """Extracts method name and arguments from a string taken from the webpage."""
+    """Extracts method name and arguments from a string taken from the webpage.
+    """
     name_split = name.split('(')
     method_name = name_split[0]
     try:
@@ -242,7 +243,7 @@ def extract_params(name: str) -> Tuple[str, str]:
         if params:
             params = params + ')'  # for the case `,properties=)`
             params = ', ' + params.replace('[', '').replace('=)', ')') \
-                .replace('=]', '=None').replace('=,', ', ').replace(']', '').replace(')', '')
+                .replace('=]', '=None').replace('=,', ', ').replace(')', '').replace(']','')
     except IndexError:
         params = ''
     return method_name, params
@@ -272,6 +273,7 @@ def method_string(method_dict):
     methods = ""
     for name, attr in method_dict.items():
         method_name, params = extract_params(name)
+        # a ']' marker is left in params to denote that that parameter is optional
         description = one_space_only(attr['description'])
         param_des = combine_para_description(attr['param_description'])
         doc_string = doc_string_template.substitute(description=description, param_description=param_des)
@@ -316,7 +318,7 @@ def class2string(key, item):
     return master_string
 
 
-def text2functions(soup, module_name: str) -> str:
+def html2functions(soup, module_name: str) -> str:
     function_str = ""
     function_template = Template('''def $name($param):\n$tab"""$description"""\n${tab}pass\n''')
     try:

@@ -4,7 +4,7 @@ from typing import List
 
 from src.anvilDocs2classes.classes import FileInfo, OutInfo
 from src.anvilDocs2classes.functions import convert_soup, text2class, classes2string, types2string, readfile, \
-    text2functions
+    html2functions
 
 HomePath = pathlib.Path(__file__).parent.parent.parent
 
@@ -16,6 +16,9 @@ def set_up_directory(module_name, out_file_info: List[OutInfo])->pathlib.Path:
     file__init = dir_path / "__init__.py"
     str__init = ""
     for info in out_file_info:
+        if module_name == 'anvil.users':
+            pass
+
         mod_name = info.filename.replace('.py', '')
         str__init += f"from .{mod_name} import *\n"
     file__init.write_text(str__init)
@@ -33,7 +36,7 @@ def convert_module(file_info: FileInfo):
 
     class_, type_catalog = text2class(soup, module_name)
     class_files = classes2string(class_, type_catalog, file_info)
-    class_files[0] += text2functions(soup, module_name)
+    class_files[0] += html2functions(soup, module_name)
     type_string = types2string(type_catalog)
     dir_path = set_up_directory(module_name,file_info.out_file_info)
     for ix, file_string in enumerate(class_files):

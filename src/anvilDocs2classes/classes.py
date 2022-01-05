@@ -20,6 +20,7 @@ class FileInfo(Prodict):
 class FileCatalog(Prodict):
     anvil: FileInfo
     GoogleMap: FileInfo
+    Users: FileInfo
 
 
 COMMON_IMPORT = """from collections import defaultdict
@@ -46,6 +47,17 @@ GoogleFileInfo = dict(
     in_file='GoogleMap.html',
     out_file_info=[
         dict(filename='GoogleMap.py',
+             imports=COMMON_IMPORT + """
+import _anvil_designer.componentsUI.anvil.component as anvil
+"""),
+    ],
+    primary_classes=[]
+)
+
+UsersFileInfo = dict(
+    in_file='users.html',
+    out_file_info=[
+        dict(filename='Users.py',
              imports=COMMON_IMPORT + """
 import _anvil_designer.componentsUI.anvil.component as anvil
 """),
