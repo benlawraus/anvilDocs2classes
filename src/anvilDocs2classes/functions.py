@@ -1,3 +1,4 @@
+import bs4
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 import pathlib
@@ -207,7 +208,7 @@ def assign_defaults(module_name: str, class_name: str, class_attr: ClassAttrType
     return
 
 
-def text2class(soup, module_name) -> Tuple[Dict, Dict]:
+def text2class(soup: bs4.BeautifulSoup, module_name: str) -> Tuple[Dict, Dict]:
     h3_list = soup.select('.class-header')
     class_ = dict()
     type_catalog = TypeCatalog.copy()
@@ -243,7 +244,7 @@ def extract_params(name: str) -> Tuple[str, str]:
         if params:
             params = params + ')'  # for the case `,properties=)`
             params = ', ' + params.replace('[', '').replace('=)', ')') \
-                .replace('=]', '=None').replace('=,', ', ').replace(')', '').replace(']','')
+                .replace('=]', '=None').replace('=,', ', ').replace(')', '').replace(']', '')
     except IndexError:
         params = ''
     return method_name, params
