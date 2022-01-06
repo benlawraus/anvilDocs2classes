@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Dict
 
-import _anvil_designer.componentsUI.anvil.component as anvil
+from ..anvil import component as anvil
 
 def default_val(val):
     return lambda: val

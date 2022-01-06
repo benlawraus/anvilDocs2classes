@@ -35,8 +35,8 @@ ModuleSettings = [
                  imports=COMMON_IMPORT),
             dict(filename='anvil_ui.py',
                  imports=COMMON_IMPORT + """
-from _anvil_designer.componentsUI.GoogleMap import GoogleMap
-from _anvil_designer.componentsUI.anvil import $primary_classes
+from ..anvilGoogleMap import anvilGoogleMap
+from .component import Component,Container,Media
 from math import pi as PI
 
 """)
@@ -47,7 +47,7 @@ from math import pi as PI
         module_name='anvil.GoogleMap',
         out_file_info=[
             dict(imports=COMMON_IMPORT + """
-import _anvil_designer.componentsUI.anvil.component as anvil
+from ..anvil import component as anvil
 """),
         ],
         primary_classes=[]
@@ -56,7 +56,7 @@ import _anvil_designer.componentsUI.anvil.component as anvil
         module_name='anvil.users',
         out_file_info=[
             dict(imports=COMMON_IMPORT + """
-import _anvil_designer.componentsUI.anvil.component as anvil
+from ..anvil import component as anvil
 """),
         ],
         primary_classes=[]

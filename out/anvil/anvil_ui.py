@@ -2,8 +2,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Dict
 
-from _anvil_designer.componentsUI.GoogleMap import GoogleMap
-from _anvil_designer.componentsUI.anvil import Component,Container,Media
+from ..anvilGoogleMap import anvilGoogleMap
+from .component import Component,Container,Media
 from math import pi as PI
 
 
@@ -416,7 +416,7 @@ class FlowPanel(Container):
 @dataclass
 class GoogleMap(Container):
 	background_color:String=None		#  Color used for the background of the Map div. This color will be visible when tiles have not yet loaded as the user pans.
-	center:GoogleMap.LatLng=None		#  The Map center.
+	center:anvilGoogleMap.LatLng=None		#  The Map center.
 	clickable_icons:Boolean=None		#  When false, map icons are not clickable. A map icon represents a point of interest
 	disable_default_ui:Boolean=None		#  Enables/disables all default UI.
 	disable_double_click_zoom:Boolean=None		#  Enables/disables zoom and center on double click.
@@ -424,33 +424,33 @@ class GoogleMap(Container):
 	draggable_cursor:String=None		#  The name or url of the cursor to display when mousing over a draggable map.
 	dragging_cursor:String=None		#  The name or url of the cursor to display when the map is being dragged.
 	fullscreen_control:Boolean=None		#  The enabled/disabled state of the Fullscreen control.
-	fullscreen_control_options:GoogleMap.FullscreenControlOptions=None		#  The display options for the Fullscreen control.
+	fullscreen_control_options:anvilGoogleMap.FullscreenControlOptions=None		#  The display options for the Fullscreen control.
 	gesture_handling:String=None		#  This setting controls how gestures on the map are handled.
 	heading:Number=None		#  The heading for aerial imagery in degrees measured clockwise from cardinal direction North.
 	height:String=None		#  The height of this component.
 	keyboard_shortcuts:Boolean=None		#  If false, prevents the map from being controlled by the keyboard.
-	map_data:GoogleMap.Data=None		#  Map data
+	map_data:anvilGoogleMap.Data=None		#  Map data
 	map_type_control:Boolean=None		#  The enabled/disabled state of the Map type control.
-	map_type_control_options:GoogleMap.MapTypeControlOptions=None		#  The display options for the Map type control.
-	map_type_id:GoogleMap.MapTypeId=None		#  The map type ID. Defaults to MapTypeId.ROADMAP
+	map_type_control_options:anvilGoogleMap.MapTypeControlOptions=None		#  The display options for the Map type control.
+	map_type_id:anvilGoogleMap.MapTypeId=None		#  The map type ID. Defaults to MapTypeId.ROADMAP
 	max_zoom:Number=None		#  The maximum zoom level which will be displayed on the map.
 	min_zoom:Number=None		#  The minimum zoom level which will be displayed on the map.
 	parent:Container=Container()		#  
 	rotate_control:Boolean=None		#  The enabled/disabled state of the rotate control.
-	rotate_control_options:GoogleMap.RotateControlOptions=None		#  The display options for the rotate control.
+	rotate_control_options:anvilGoogleMap.RotateControlOptions=None		#  The display options for the rotate control.
 	scale_control:Boolean=None		#  The enabled/disabled state of the scale control.
-	scale_control_options:GoogleMap.ScaleControlOptions=None		#  The display options for the scale control.
+	scale_control_options:anvilGoogleMap.ScaleControlOptions=None		#  The display options for the scale control.
 	scroll_wheel:Boolean=None		#  If false, disables scrollwheel zooming on the map.
 	spacing_above:String=None		#  The vertical space above this component.
 	spacing_below:String=None		#  The vertical space below this component.
 	street_view_control:Boolean=None		#  The enabled/disabled state of the street view control.
-	street_view_control_options:GoogleMap.StreetViewControlOptions=None		#  The display options for the street view control.
+	street_view_control_options:anvilGoogleMap.StreetViewControlOptions=None		#  The display options for the street view control.
 	tag=defaultdict(default_val(None))		#  Use this property to store any extra information about this component
 	visible:Boolean=None		#  Should this component be displayed?
 	width:String=None		#  The width of this GoogleMap, or “default” to have the width set by the container.
 	zoom:Number=None		#  The map zoom level.
 	zoom_control:Boolean=None		#  The enabled/disabled state of the zoom control.
-	zoom_control_options:GoogleMap.ZoomControlOptions=None		#  The display options for the zoom control.
+	zoom_control_options:anvilGoogleMap.ZoomControlOptions=None		#  The display options for the zoom control.
 	def close(self):
 		"""Closes this InfoWindow.		"""
 		pass

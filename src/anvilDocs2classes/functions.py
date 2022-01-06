@@ -2,7 +2,7 @@ import bs4
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 import pathlib
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Optional, Any
 from string import Template, whitespace
 
 from src.anvilDocs2classes.types import TypeCatalog, GENERIC_ITEM
@@ -48,7 +48,22 @@ def convert_soup(html_doc):
     return soup
 
 
-def translate_type(attr_method, type_catalog: Dict[str, str], module_name: str) -> str:
+class Attribute(Prodict):
+    attr: str
+    of_type: str
+    description: str
+    param_description: Any
+
+
+class ClassInfo(Prodict):
+    base_class: str
+    constructor: str
+    attributes: Dict[str, Attribute]
+    methods: Dict[str, Prodict]
+    events: Dict[str, Prodict]
+
+
+def translate_type(attr_method: Attribute, type_catalog: Dict[str, str], module_name: str) -> str:
     seconds_list = ('duration', 'current_time', 'interval')
     objects_list = ('items',)
     int_list = ('rows_per_page',)
@@ -66,15 +81,23 @@ def translate_type(attr_method, type_catalog: Dict[str, str], module_name: str) 
         return 'Integer'
     if attr == 'parent':
         return 'Object'
-    if 'anvil' in of_type and of_type.count('.') == 1:
-        class_name = of_type.replace(' instance', '')
-        if module_name == 'anvil':
-            # drop the `anvil.`
-            class_name = class_name.replace('anvil.', '')
+    if 'anvil' in of_type:
+        class_name = of_type
+        if of_type.count('.') == 1:
+            # convert the `anvil.` this file
+            if module_name == 'anvil':
+                class_name = of_type.replace('anvil.', '')
+        else:
+            if module_name in of_type and module_name != 'anvil':
+                class_name = of_type.replace(module_name + '.', '')
+            else:
+                # convert the `anvil.` to file name
+                class_name = of_type.replace('anvil.', 'anvil')
+        class_name = class_name.replace(' instance', '')
         type_catalog.update({class_name: class_name})
         return class_name
     if module_name in of_type:
-        class_name = of_type.replace(' instance', '').split(module_name + '.')[1]
+        class_name = of_type.replace(' instance', '').replace(module_name + '.', '')
         type_catalog.update({class_name: class_name})
         return class_name
     if "in pixels" in description:
@@ -89,7 +112,7 @@ def translate_type(attr_method, type_catalog: Dict[str, str], module_name: str) 
 def extract_class_inners(class_sec: Tag,
                          type_catalog: Dict[str, str],
                          module_name) -> Dict[str, Dict[str, str]]:
-    """
+    """Extracts the attributes of the class from the soup.
 
     :param class_sec:
     :type class_sec:
@@ -133,8 +156,8 @@ def extract_class_inners(class_sec: Tag,
                 of_t = bs_class_parts.i.get_text()
             except AttributeError:
                 pass
-            attr_method = dict(attr=attr_name, of_type=of_t, description=description, param_description=par)
-            attr_method['of_type'] = translate_type(attr_method, type_catalog, module_name)
+            attr_method = Attribute(attr=attr_name, of_type=of_t, description=description, param_description=par)
+            attr_method.of_type = translate_type(attr_method, type_catalog, module_name)
             class_parts.update({attr_name: attr_method})
         except AttributeError:
             pass
@@ -142,7 +165,9 @@ def extract_class_inners(class_sec: Tag,
     return class_parts
 
 
-def extract_class_outers(h3, module_name):
+def extract_class_outers(h3, module_name) -> Dict[str,Dict]:
+    """Gets child class (`base_class`) and `contructor` for the class and returns a dict where the
+    key is the class name."""
     try:
         div = h3.parent.div
         bs_class_name = h3.code
@@ -209,6 +234,7 @@ def assign_defaults(module_name: str, class_name: str, class_attr: ClassAttrType
 
 
 def text2class(soup: bs4.BeautifulSoup, module_name: str) -> Tuple[Dict, Dict]:
+    """Parses the `soup` into class dict."""
     h3_list = soup.select('.class-header')
     class_ = dict()
     type_catalog = TypeCatalog.copy()
@@ -306,13 +332,14 @@ def attr_string(attr_dict):
     return attrs
 
 
-def class2string(key, item):
+def class2string(class_name, class_dict):
+    """Converts the class dict to a string."""
     class_template = Template("\n@dataclass\nclass $class_name($base_class):\n$attrs$methods$events\tpass\n")
-    attrs = attr_string(item.get('attributes', {}))
-    methods = method_string(item.get('methods', {}))
-    events = method_string(item.get('events', {}))
-    master_string = class_template.substitute(class_name=key,
-                                              base_class=item.get('base_class', ''),
+    attrs = attr_string(class_dict.get('attributes', {}))
+    methods = method_string(class_dict.get('methods', {}))
+    events = method_string(class_dict.get('events', {}))
+    master_string = class_template.substitute(class_name=class_name,
+                                              base_class=class_dict.get('base_class', ''),
                                               attrs=attrs,
                                               methods=methods,
                                               events='')  # events)
@@ -352,33 +379,36 @@ def set_url_hash(*args, **kwargs):
     return function_str
 
 
-def classes2string(class_: dict, type_catalog: dict, file_info: FileInfo) -> List[str]:
+def classes2string(classes: dict, type_catalog: dict, file_info: FileInfo) -> List[str]:
+    """Converts the `class_` dictionary to  string."""
     # primary_classes = ('Component', 'Container', 'Media')
     class_files = [''] * len(file_info.out_file_info)
     ix = 0
     counter = 0
     for class_name in file_info.primary_classes:
-        if class_name not in class_:
+        # This loop is for those child classes that most other classes depend on.
+        if class_name not in classes:
             continue
         counter += 1
-        class_files[ix] += class2string(class_name, class_[class_name])
+        class_files[ix] += class2string(class_name, classes[class_name])
 
+    # if there were child classes in `primary_classes` field, increment the out_file
     if counter > 0:
         ix = 1
-
-    for class_name in type_catalog:
-        if class_name in file_info.primary_classes:
+    # if class is used as a type for an attribute, put this class first.
+    for type_class in type_catalog:
+        if type_class in file_info.primary_classes:
             continue
-        if class_name not in class_:
+        if type_class not in classes:
             continue
-        class_files[ix] += class2string(class_name, class_[class_name])
-
-    for class_name in class_:
+        class_files[ix] += class2string(type_class, classes[type_class])
+    # Place rest of the classes last
+    for class_name in classes:
         if class_name in file_info.primary_classes:
             continue
         if class_name in type_catalog:
             continue
-        class_files[ix] += class2string(class_name, class_[class_name])
+        class_files[ix] += class2string(class_name, classes[class_name])
 
     return class_files
 
