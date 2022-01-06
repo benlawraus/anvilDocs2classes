@@ -46,8 +46,7 @@ from math import pi as PI
     dict(
         module_name='anvil.GoogleMap',
         out_file_info=[
-            dict(filename='GoogleMap.py',
-                 imports=COMMON_IMPORT + """
+            dict(imports=COMMON_IMPORT + """
 import _anvil_designer.componentsUI.anvil.component as anvil
 """),
         ],
@@ -56,8 +55,7 @@ import _anvil_designer.componentsUI.anvil.component as anvil
     dict(
         module_name='anvil.users',
         out_file_info=[
-            dict(filename='Users.py',
-                 imports=COMMON_IMPORT + """
+            dict(imports=COMMON_IMPORT + """
 import _anvil_designer.componentsUI.anvil.component as anvil
 """),
         ],

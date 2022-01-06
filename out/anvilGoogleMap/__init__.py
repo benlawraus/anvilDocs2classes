@@ -1,1 +1,1 @@
-from .GoogleMap import *
+from .anvilGoogleMap import *

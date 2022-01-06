@@ -384,6 +384,7 @@ def classes2string(class_: dict, type_catalog: dict, file_info: FileInfo) -> Lis
 
 
 def types2string(type_catalog: Dict):
+    """Converts the `TypeCatalog` into a string definition for printing."""
     types_string = GENERIC_ITEM
     for key, item in TypeCatalog.items():
         types_string += f"{key} = {item}\n"
