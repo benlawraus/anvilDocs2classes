@@ -99,7 +99,7 @@ def convert_module(file_name: str):
 
 
 def process_directory():
-    """Reads all the files in the directory anc converts them into empty class and function definitions."""
+    """Reads all the files in the directory and converts them into empty class and function definitions."""
     filenames = get_file_names('webpages')
     for filename in filenames:
         convert_module(filename)
