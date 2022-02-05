@@ -15,6 +15,7 @@ class FileInfo(Prodict):
     module_name: str
     out_file_info: List[OutInfo]
     primary_classes: List[str]
+    read_file_for: List[str]
 
 
 class FileCatalog(Prodict):
@@ -41,7 +42,8 @@ from math import pi as PI
 
 """)
         ],
-        primary_classes=['Component', 'Container', 'Media']
+        primary_classes=['Component', 'Container', 'Media'],
+        read_file_for=['Component', 'Container']
     ),
     dict(
         module_name='anvil.GoogleMap',

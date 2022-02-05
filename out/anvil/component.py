@@ -19,47 +19,63 @@ Uri = str
 Html = str
 Icon = str
 Form = object
-
 @dataclass
 class Component():
-	def add_event_handler(self, event_name, handler_func):
-		"""Add an event handler function to be called when the event happens on this component. Event handlers will be called in the order they are added. Adding the same event handler multiple times will mean it gets called multiple times.		"""
-		pass
-	def get_event_handlers(self, event_name):
-		"""Get the current event_handlers for a given event_name		"""
-		pass
-	def raise_event(self, event_name, **event_args):
-		"""Trigger the event on this component. Any keyword arguments are passed to the handler function.		"""
-		pass
-	def remove_event_handler(self, event_name, handler_func):
-		"""Remove a specific event handler function for a given event. Calling remove_event_handler with just the event name will remove all the handlers for this event		"""
-		pass
-	def remove_from_parent(self):
-		"""Remove this component from its parent container.		"""
-		pass
-	def scroll_into_view(self, smooth=False):
-		"""Scroll the window to make sure this component is in view.		"""
-		pass
-	def set_event_handler(self, event_name, handler_func):
-		"""Set a function to call when the ‘event_name’ event happens on this component. Using set_event_hanlder removes all other handlers. Seting the handler function to None removes all handlers.		"""
-		pass
-	pass
+    _events=field(default_factory=list)
+    def add_event_handler(self, event_name, handler_func):
+        """Add an event handler function to be called when the event happens on this component. Event handlers will be called in the order they are added. Adding the same event handler multiple times will mean it gets called multiple times.		"""
+        ev = self._events.get(event_name,[])
+        ev.append(handler_func)
+        self._events.update({event_name:ev})
 
+    def get_event_handlers(self, event_name):
+        """Get the current event_handlers for a given event_name		"""
+        return self._events.get(event_name,[])
+
+    def raise_event(self, event_name, **event_args):
+        """Trigger the event on this component. Any keyword arguments are passed to the handler function.		"""
+        for ev in self._events.get(event_name,[]):
+            ev(**event_args)
+
+    def remove_event_handler(self, event_name, handler_func=None):
+        """Remove a specific event handler function for a given event. Calling remove_event_handler with just the event name will remove all the handlers for this event		"""
+        if handler_func is None:
+            self._events.pop(event_name,None)
+        else:
+            self._events[event_name].remove(handler_func)
+
+
+    def remove_from_parent(self):
+        """Remove this component from its parent container.		"""
+        pass
+
+    def scroll_into_view(self, smooth=False):
+        """Scroll the window to make sure this component is in view.		"""
+        pass
+
+    def set_event_handler(self, event_name, handler_func):
+        """Set a function to call when the ‘event_name’ event happens on this component. Using set_event_handler removes all other handlers. Setting the handler function to None removes all handlers.		"""
+        self._events[event_name]=[handler_func]
 @dataclass
 class Container(Component):
-	def add_component(self, component):
-		"""Add a component to this container.		"""
-		pass
-	def clear(self):
-		"""Remove all components from this container		"""
-		pass
-	def get_components(self):
-		"""Get a list of components in this container		"""
-		pass
-	def raise_event_on_children(self, event_name, **event_args):
-		"""Trigger the ‘event_name’ event on all children of this component. Any keyword arguments are passed to the handler function.		"""
-		pass
-	pass
+    _components:list = field(default_factory=list)
+
+    def add_component(self, component, **kwargs):
+        """Add a component to this container.		"""
+        self._components.append(component)
+        pass
+
+    def clear(self):
+        """Remove all components from this container		"""
+        self._components = []
+
+    def get_components(self):
+        """Get a list of components in this container		"""
+        return self._components
+
+    def raise_event_on_children(self, event_name, **event_args):
+        """Trigger the ‘event_name’ event on all children of this component. Any keyword arguments are passed to the handler function.		"""
+        pass
 
 @dataclass
 class Media():

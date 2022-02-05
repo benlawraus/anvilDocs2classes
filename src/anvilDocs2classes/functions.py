@@ -200,7 +200,9 @@ def assign_parent_default(module_name: str, class_attr: ClassAttrType) -> None:
         parent_str = 'Container'
         if 'anvil.' in module_name:
             parent_str = 'anvil.' + parent_str
-        class_attr['parent'].update({'default': parent_str + '()',
+        # class_attr['parent'].update({'default': parent_str + '()',
+        #                              'of_type': parent_str})
+        class_attr['parent'].update({'default': f"field(default_factory={parent_str})",
                                      'of_type': parent_str})
 
 
@@ -208,8 +210,10 @@ def assign_defaultdict(class_attr: ClassAttrType) -> None:
     """Alters class_attr['item'] and class_attr['tag'] by adding a default field."""
     for attr in ('item', 'tag'):
         if attr in class_attr:
-            class_attr[attr].update({'default': 'defaultdict(default_val(None))',
-                                     'of_type': None})
+            # class_attr[attr].update({'default': 'defaultdict(default_val(None))',
+            #                          'of_type': None})
+            class_attr[attr].update({'default': 'field(default_factory=ClassDict)',
+                                     'of_type': 'ClassDict'})
     return
 
 
@@ -315,6 +319,7 @@ def method_string(method_dict):
 
 
 def attr_string(attr_dict):
+    """Takes the information in `attr_dict` and converts it into a string."""
     attrs = ""
     attr_template = Template("\t$name$type_not_none$of_type$default\t\t#  $description\n")
     for name, attr in attr_dict.items():
@@ -390,7 +395,11 @@ def classes2string(classes: dict, type_catalog: dict, file_info: FileInfo) -> Li
         if class_name not in classes:
             continue
         counter += 1
-        class_files[ix] += class2string(class_name, classes[class_name])
+        if class_name in file_info.read_file_for:
+            class_string = readfile(class_name.lower()+".txt", pathlib.Path(__file__).parent)[0]
+            class_files[ix] += class_string
+        else:
+            class_files[ix] += class2string(class_name, classes[class_name])
 
     # if there were child classes in `primary_classes` field, increment the out_file
     if counter > 0:
